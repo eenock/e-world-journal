@@ -7,24 +7,75 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "e-world",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.eworld",
+      "infoPlist": {
+        "NSCameraUsageDescription": "e-world needs access to your camera to take photos.",
+        "NSPhotoLibraryUsageDescription": "e-world needs access to your photo library.",
+        "NSMicrophoneUsageDescription": "e-world needs access to your microphone.",
+        "NSFaceIDUsageDescription": "e-world uses Face ID to securely unlock your data."
+      }
     },
     "android": {
+      "package": "com.yourcompany.eworld",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.USE_FINGERPRINT"
+      ]
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    }
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow e-world to access your camera."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow e-world to access your photos."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow e-world to access your microphone."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow e-world to use Face ID."
+        }
+      ],
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "8b6fea68-8ebf-4eb5-ad39-3c38440f86b3"
+      }
+    },
+    "owner": "enock-projects"
   }
 }
