@@ -17,6 +17,12 @@ interface Entry {
     is_favorite: boolean;
     created_at: string;
     updated_at: string;
+    mood?: {
+        id?: string;
+        emoji: string;
+        name: string;
+        color: string;
+    };
 }
 
 interface Mood {

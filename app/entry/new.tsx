@@ -116,8 +116,8 @@ export default function NewEntryScreen() {
             } else {
                 // Save locally for offline sync
                 addPendingEntry(entryData as any);
-                Alert.alert('Saved Offline', 'Your entry will sync when you're back online.');
-      }
+                Alert.alert('Saved Offline', 'Your entry will sync when you\'re back online.');
+            }
 
             router.back();
         } catch (error) {

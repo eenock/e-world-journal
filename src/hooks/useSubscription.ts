@@ -6,6 +6,14 @@ import {
     canAccessFeature,
 } from '@/lib/revenuecat';
 
+// Define the allowed feature keys (must match your RevenueCat setup)
+type ProFeature =
+    | 'unlimited_history'
+    | 'ai_insights'
+    | 'export'
+    | 'themes'
+    | 'semantic_search';
+
 export const useSubscription = () => {
     const { customerInfo, setCustomerInfo } = useStore();
 
@@ -24,9 +32,7 @@ export const useSubscription = () => {
 
     const isPro = customerInfo ? isProUser(customerInfo) : false;
 
-    const hasFeatureAccess = (
-        feature: 'unlimited_history' | 'ai_insights' | 'export' | 'themes' | 'semantic_search'
-    ) => {
+    const hasFeatureAccess = (feature: ProFeature): boolean => {
         return canAccessFeature(feature, customerInfo);
     };
 

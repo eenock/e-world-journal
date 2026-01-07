@@ -1,3 +1,4 @@
+// Fixed AttachmentPicker.tsx
 import React, { useState } from 'react';
 import {
     View,
@@ -103,8 +104,9 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
             uploading: true,
         };
 
-        // Add temporary attachment
-        onAttachmentsChange([...attachments, tempAttachment]);
+        // Add temporary attachment locally first
+        const currentAttachments = [...attachments, tempAttachment];
+        onAttachmentsChange(currentAttachments);
         setIsUploading(true);
 
         try {
@@ -120,22 +122,25 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
                 type,
             });
 
-            // Update with real storage path
-            const updatedAttachments = attachments.map((att) =>
+            // Update the temp attachment to remove uploading
+            const updatedAttachments = currentAttachments.map((att) =>
                 att.id === tempId
                     ? { ...att, uploading: false, storagePath: data.path }
                     : att
             );
 
-            onAttachmentsChange([
-                ...updatedAttachments,
-                {
-                    id: data.path,
-                    uri: getPublicUrl(data.path),
-                    type: 'image',
-                    storagePath: data.path,
-                },
-            ].filter((att) => att.id !== tempId));
+            // Create the final attachment with public URL
+            const newAttachment: Attachment = {
+                id: data.path,
+                uri: getPublicUrl(data.path),
+                type: 'image',
+                storagePath: data.path,
+            };
+
+            // Replace temp with new
+            onAttachmentsChange(
+                updatedAttachments.filter((att) => att.id !== tempId).concat(newAttachment)
+            );
         } catch (error) {
             console.error('Upload error:', error);
             Alert.alert('Upload Failed', 'Failed to upload image');

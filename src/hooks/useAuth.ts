@@ -1,15 +1,17 @@
+// src/hooks/useAuth.ts
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useStore } from '@/store';
 import { initRevenueCat, getCustomerInfo } from '@/lib/revenuecat';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as Google from 'expo-auth-session/providers/google';
+import { analytics, AnalyticsEvents } from '@/lib/analytics';
+import { errorHandler } from '@/lib/error-handler';
 
 export const useAuth = () => {
     const { user, session, setAuth, setLoading, signOut: clearAuth, setCustomerInfo } = useStore();
 
     useEffect(() => {
-        // Get initial session
+        // Load initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setAuth(session?.user ?? null, session);
             if (session?.user) {
@@ -17,7 +19,7 @@ export const useAuth = () => {
             }
         });
 
-        // Listen for auth changes
+        // Listen to auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (_event, session) => {
                 setAuth(session?.user ?? null, session);
@@ -39,13 +41,18 @@ export const useAuth = () => {
             const customerInfo = await getCustomerInfo();
             setCustomerInfo(customerInfo);
 
-            // Ensure user record exists
-            const { error } = await supabase.from('users').upsert({
-                id: userId,
-                updated_at: new Date().toISOString(),
-            }, { onConflict: 'id' });
+            // Make sure user record exists in Supabase
+            const { error } = await supabase.from('users').upsert(
+                {
+                    id: userId,
+                    updated_at: new Date().toISOString(),
+                },
+                { onConflict: 'id' }
+            );
 
-            if (error) console.error('Error upserting user:', error);
+            if (error) {
+                console.error('Error upserting user record:', error);
+            }
         } catch (error) {
             console.error('Error initializing user:', error);
         }
@@ -53,40 +60,57 @@ export const useAuth = () => {
 
     const signInWithEmail = async (email: string, password: string) => {
         setLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-        setLoading(false);
-        if (error) throw error;
-        return data;
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) throw error;
+            analytics.track(AnalyticsEvents.SIGN_IN, { method: 'email' });
+            return data;
+        } catch (error) {
+            errorHandler.handleAuthError(error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
     };
 
     const signUpWithEmail = async (email: string, password: string, fullName?: string) => {
         setLoading(true);
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: { full_name: fullName },
-            },
-        });
-        setLoading(false);
-        if (error) throw error;
-        return data;
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: { full_name: fullName },
+                },
+            });
+            if (error) throw error;
+            analytics.track(AnalyticsEvents.SIGN_UP, { method: 'email' });
+            return data;
+        } catch (error) {
+            errorHandler.handleAuthError(error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
     };
 
     const signInWithMagicLink = async (email: string) => {
         setLoading(true);
-        const { data, error } = await supabase.auth.signInWithOtp({
-            email,
-            options: {
-                emailRedirectTo: 'reflect://auth/callback',
-            },
-        });
-        setLoading(false);
-        if (error) throw error;
-        return data;
+        try {
+            const { data, error } = await supabase.auth.signInWithOtp({
+                email,
+                options: {
+                    emailRedirectTo: 'reflect://auth/callback',
+                },
+            });
+            if (error) throw error;
+            return data;
+        } finally {
+            setLoading(false);
+        }
     };
 
     const signInWithApple = async () => {
@@ -106,37 +130,54 @@ export const useAuth = () => {
                 if (error) throw error;
                 return data;
             }
+            return null;
         } catch (error: any) {
             if (error.code === 'ERR_REQUEST_CANCELED') {
-                // User canceled
+                // User cancelled → no error
                 return null;
             }
+            console.error('Apple sign-in error:', error);
             throw error;
         }
     };
 
     const signInWithGoogle = async () => {
-        // Note: Requires proper Google OAuth setup in Supabase and Expo config
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: 'reflect://auth/callback',
-            },
-        });
-        if (error) throw error;
-        return data;
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: 'reflect://auth/callback',
+                },
+            });
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Google sign-in error:', error);
+            throw error;
+        }
     };
 
     const signOut = async () => {
-        await supabase.auth.signOut();
-        clearAuth();
+        try {
+            await supabase.auth.signOut();
+            analytics.track(AnalyticsEvents.SIGN_OUT);
+            analytics.reset();
+            clearAuth();
+        } catch (error) {
+            errorHandler.handleAuthError(error);
+        }
     };
 
     const resetPassword = async (email: string) => {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: 'reflect://auth/reset-password',
-        });
-        if (error) throw error;
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: 'reflect://auth/reset-password',
+            });
+            if (error) throw error;
+        } catch (error) {
+            console.error('Password reset error:', error);
+            throw error;
+        }
     };
 
     return {

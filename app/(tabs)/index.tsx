@@ -11,6 +11,7 @@ interface Prompt {
     id: string;
     text: string;
     category?: string;
+    tier: 'free' | 'pro';
 }
 
 export default function HomeScreen() {
@@ -140,7 +141,7 @@ export default function HomeScreen() {
                 >
                     <Text style={styles.promptLabel}>Today's Prompt</Text>
                     <Text style={styles.promptText}>
-                        {todayPrompt?.text || 'What's on your mind today?'}
+                        {todayPrompt?.text || "What's on your mind today?"}
                     </Text>
 
                     <View style={styles.promptActions}>

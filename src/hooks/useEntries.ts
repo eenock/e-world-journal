@@ -42,11 +42,23 @@ export const useEntries = () => {
             if (error) throw error;
 
             const formattedEntries = data.map((entry: any) => ({
-                ...entry,
+                id: entry.id,
+                user_id: entry.user_id || user.id,
+                title: entry.title,
+                content: entry.content || {},
+                content_text: entry.content_text,
+                mood_id: entry.moods?.id,
                 mood: entry.moods,
+                mood_intensity: entry.mood_intensity,
+                prompt_id: entry.prompt_id,
+                tags: entry.tags || [],
+                entry_date: entry.entry_date,
+                is_favorite: entry.is_favorite,
+                created_at: entry.created_at,
+                updated_at: entry.updated_at || entry.created_at,
             }));
 
-            setEntries(formattedEntries);
+            setEntries(formattedEntries as any);
         } catch (error) {
             console.error('Error loading entries:', error);
             Alert.alert('Error', 'Failed to load entries');

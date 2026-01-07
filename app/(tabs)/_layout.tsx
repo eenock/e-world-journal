@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 
 export default function TabsLayout() {
     return (
@@ -76,9 +76,9 @@ const TabIcon = ({ emoji, color, size }: { emoji: string; color: string; size: n
     return (
         <View style={{ opacity: color === '#667eea' ? 1 : 0.6 }}>
             {/* Using emojis as icons - in production, use icon library */}
-            <View style={{ fontSize: size }}>
-                {/* Placeholder for actual icon rendering */}
-            </View>
+            <Text style={{ fontSize: size }}>
+                {emoji}
+            </Text>
         </View>
     );
 };

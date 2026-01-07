@@ -128,7 +128,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${process.env.EXPO_PUBLIC_GROQ_API_KEY}`,
+                    'Authorization': `Bearer ${EXPO_PUBLIC_GROQ_API_KEY}`,
                 },
                 body: formData,
             });

@@ -10,6 +10,7 @@ interface EntryCardProps {
         content_text?: string;
         entry_date: string;
         mood?: {
+            id?: string;
             emoji: string;
             name: string;
             color: string;

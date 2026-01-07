@@ -1,3 +1,5 @@
+// Fixed [id].tsx – Full file with TypeScript fix for updateEntry
+
 import React, { useState, useEffect } from 'react';
 import {
     View,
@@ -20,12 +22,12 @@ import { format } from 'date-fns';
 interface Entry {
     id: string;
     user_id: string;
-    title?: string;
+    title?: string | null;
     content: any;
-    content_text?: string;
-    mood_id?: string;
-    mood_intensity?: number;
-    prompt_id?: string;
+    content_text?: string | null;
+    mood_id?: string | null;
+    mood_intensity?: number | null;
+    prompt_id?: string | null;
     tags: string[];
     entry_date: string;
     is_favorite: boolean;
@@ -67,7 +69,7 @@ export default function EntryDetailScreen() {
                 .from('entries')
                 .select(`
           *,
-          moods (
+          mood:moods (
             id,
             name,
             emoji,
@@ -118,6 +120,11 @@ export default function EntryDetailScreen() {
                 updated_at: new Date().toISOString(),
             };
 
+            // Clean up mood_intensity if no mood selected
+            if (!editedMoodId) {
+                (updates as any).mood_intensity = null;
+            }
+
             const { error } = await supabase
                 .from('entries')
                 .update(updates)
@@ -125,9 +132,15 @@ export default function EntryDetailScreen() {
 
             if (error) throw error;
 
-            updateEntry(entry.id, updates);
+            // Convert null → undefined for the store's updateEntry (which expects | undefined)
+            updateEntry(entry.id, {
+                ...updates,
+                title: updates.title ?? undefined,
+                mood_id: updates.mood_id ?? undefined,
+                mood_intensity: updates.mood_intensity ?? undefined,
+            });
 
-            // Update local state
+            // Update local state (keep nulls as they come from DB)
             setEntry({ ...entry, ...updates });
             setIsEditing(false);
 

@@ -30,12 +30,12 @@ export const Button: React.FC<ButtonProps> = ({
 
     return (
         <Pressable
-            style={[
+            style={(state) => [
                 styles.button,
                 styles[variant],
                 styles[size],
                 (disabled || loading) && styles.disabled,
-                style,
+                typeof style === 'function' ? style(state) : style,
             ]}
             onPress={handlePress}
             disabled={disabled || loading}

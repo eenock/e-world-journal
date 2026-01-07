@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
+import { env } from '@/config/env';
+import { errorHandler, ErrorSeverity } from './error-handler';
+import { logger } from './logger';
 
-const GROQ_API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY!;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
 export interface ChatMessage {
@@ -79,7 +81,7 @@ export async function streamChat(
         const response = await fetch(GROQ_API_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
+                'Authorization': `Bearer ${env.ai.groqApiKey}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -130,7 +132,12 @@ export async function streamChat(
 
         onComplete();
     } catch (error) {
-        console.error('Chat streaming error:', error);
+        errorHandler.handle({
+            message: 'Failed to stream chat response',
+            code: 'CHAT_STREAM_ERROR',
+            severity: ErrorSeverity.MEDIUM,
+            originalError: error as Error,
+        });
         throw error;
     }
 }
@@ -141,11 +148,10 @@ export async function searchEntriesSemantic(
     userId: string,
     limit: number = 5
 ): Promise<any[]> {
-    // First generate embedding for the query
     const embeddingResponse = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${process.env.EXPO_PUBLIC_OPENAI_API_KEY}`,
+            'Authorization': `Bearer ${env.ai.openaiApiKey}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -188,7 +194,7 @@ export async function generateWeeklyInsight(
     const response = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${GROQ_API_KEY}`,
+            'Authorization': `Bearer ${env.ai.groqApiKey}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
